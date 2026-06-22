@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小红书「毕业」热词分析报告 — 老铺 / 君佩 / 爱马仕</title>
+<style>
+  :root {
+    --red: #FF2442;
+    --red-light: #FF6B81;
+    --red-bg: #FFF0F2;
+    --gold: #C8A96E;
+    --dark: #1A1A1A;
+    --gray: #6B6B6B;
+    --light: #F8F8F8;
+    --border: #EBEBEB;
+    --shadow: 0 2px 16px rgba(255,36,66,0.08);
+    --shadow-hover: 0 8px 32px rgba(255,36,66,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', sans-serif;
+    background: #F5F5F7;
+    color: var(--dark);
+    line-height: 1.6;
+  }
+
+  /* ===== HEADER ===== */
+  .site-header {
+    background: linear-gradient(135deg, #FF2442 0%, #FF6B81 100%);
+    color: white;
+    padding: 40px 24px 32px;
+    text-align: center;
+  }
+  .site-header .logo { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+  .site-header .logo span { background: white; color: var(--red); padding: 2px 8px; border-radius: 6px; margin-right: 6px; }
+  .site-header h1 { font-size: 22px; font-weight: 600; margin-top: 10px; opacity: 0.95; }
+  .site-header .meta { font-size: 13px; opacity: 0.75; margin-top: 6px; }
+
+  /* ===== CONTAINER ===== */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+  /* ===== SUMMARY SECTION ===== */
+  .summary-section { padding: 32px 0 16px; }
+  .summary-section h2 {
+    font-size: 18px; font-weight: 700; color: var(--dark);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  .summary-section h2::before { content: ''; display: block; width: 4px; height: 18px; background: var(--red); border-radius: 2px; }
+
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  @media (max-width: 768px) { .summary-grid { grid-template-columns: 1fr; } }
+
+  .summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--red);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .summary-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+  .summary-card .brand {
+    font-size: 20px; font-weight: 800; color: var(--red); margin-bottom: 4px;
+  }
+  .summary-card .brand-en { font-size: 12px; color: var(--gray); margin-bottom: 16px; }
+  .summary-card .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-item { background: var(--red-bg); border-radius: 10px; padding: 10px 12px; }
+  .stat-item .num { font-size: 22px; font-weight: 800; color: var(--red); }
+  .stat-item .label { font-size: 11px; color: var(--gray); margin-top: 2px; }
+  .stat-item.full { grid-column: span 2; }
+
+  /* ===== KEYWORD SECTION ===== */
+  .keyword-section { padding: 24px 0 40px; }
+  .section-title {
+    font-size: 20px; font-weight: 800; color: var(--dark);
+    margin-bottom: 6px; display: flex; align-items: center; gap: 10px;
+  }
+  .section-title .tag {
+    background: var(--red); color: white;
+    font-size: 12px; padding: 3px 10px; border-radius: 20px; font-weight: 600;
+  }
+  .section-subtitle { font-size: 13px; color: var(--gray); margin-bottom: 24px; }
+  .sort-note { font-size: 12px; color: var(--red); background: var(--red-bg); display: inline-block; padding: 4px 10px; border-radius: 20px; margin-bottom: 20px; }
+
+  /* ===== POST CARDS ===== */
+  .posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .post-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .post-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+
+  .post-rank {
+    position: absolute;
+    top: 10px; left: 10px;
+    background: var(--red); color: white;
+    font-size: 12px; font-weight: 800;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 2;
+  }
+  .post-rank.top3 { background: var(--gold); }
+
+  .post-img-wrap {
+    position: relative;
+    padding-top: 66%;
+    background: #F0F0F0;
+    flex-shrink: 0;
+  }
+  .post-img-wrap img {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .post-img-wrap .img-placeholder {
+    position: absolute; top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; background: var(--red-bg);
+  }
+
+  .post-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+  .post-title {
+    font-size: 15px; font-weight: 700; color: var(--dark);
+    margin-bottom: 8px; line-height: 1.4;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .post-date { font-size: 12px; color: var(--gray); margin-bottom: 8px; }
+  .post-desc {
+    font-size: 13px; color: #555; line-height: 1.6;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+    flex: 1;
+  }
+
+  .post-stats {
+    display: flex; gap: 14px; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .stat { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--gray); }
+  .stat .icon { font-size: 15px; }
+  .stat .val { font-weight: 700; color: var(--dark); }
+  .stat.highlight .val { color: var(--red); }
+
+  .post-link {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 7px 14px;
+    background: var(--red-bg);
+    color: var(--red);
+    font-size: 12px; font-weight: 600;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    align-self: flex-start;
+  }
+  .post-link:hover { background: var(--red); color: white; }
+
+  /* ===== DIVIDER ===== */
+  .divider { height: 1px; background: var(--border); margin: 8px 0 32px; }
+
+  /* ===== FOOTER ===== */
+  .site-footer {
+    background: white; border-top: 1px solid var(--border);
+    text-align: center; padding: 24px;
+    font-size: 12px; color: var(--gray);
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="logo"><span>📊</span>小红书内容分析</div>
+  <h1>「毕业」消费主题帖子分析报告</h1>
+  <div class="meta">关键词：老铺黄金 · 君佩 · 爱马仕 &nbsp;|&nbsp; 数据采集：2026-06-22 &nbsp;|&nbsp; 范围：近半年（2025-12-22 后）</div>
+</header>
+
+<div class="container">
+
+  <!-- ===== 汇总统计 ===== -->
+  <section class="summary-section">
+    <h2>三组关键词汇总统计</h2>
+    <div class="summary-grid">
+
+      <!-- 老铺黄金 -->
+      <div class="summary-card">
+        <div class="brand">老铺黄金 毕业</div>
+        <div class="brand-en">LAOPU GOLD · Graduation</div>
+        <div class="stats">
+          <div class="stat-item full">
+            <div class="num">18</div>
+            <div class="label">半年内符合条件帖子数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">201</div>
+            <div class="label">最高评论数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">45</div>
+            <div class="label">平均评论数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">155</div>
+            <div class="label">平均点赞数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">38</div>
+            <div class="label">平均收藏数</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 君佩 -->
+      <div class="summary-card">
+        <div class="brand">君佩 毕业</div>
+        <div class="brand-en">JEMPER · Graduation</div>
+        <div class="stats">
+          <div class="stat-item full">
+            <div class="num">9</div>
+            <div class="label">半年内符合条件帖子数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">79</div>
+            <div class="label">最高评论数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">24</div>
+            <div class="label">平均评论数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">193</div>
+            <div class="label">平均点赞数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">87</div>
+            <div class="label">平均收藏数</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 爱马仕 -->
+      <div class="summary-card">
+        <div class="brand">爱马仕 毕业</div>
+        <div class="brand-en">HERMÈS · Graduation</div>
+        <div class="stats">
+          <div class="stat-item full">
+            <div class="num">7</div>
+            <div class="label">半年内符合条件帖子数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">79</div>
+            <div class="label">最高评论数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">24</div>
+            <div class="label">平均评论数</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">5176</div>
+            <div class="label">最高点赞（千金毕业）</div>
+          </div>
+          <div class="stat-item">
+            <div class="num">48</div>
+            <div class="label">平均收藏数</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== 老铺黄金 ===== -->
+  <section class="keyword-section">
+    <div class="section-title">
+      🪙 老铺黄金 · 毕业
+      <span class="tag">18 篇</span>
+    </div>
+    <div class="section-subtitle">搜索关键词：老铺 毕业（含"老铺黄金"等价匹配）· 近半年内发布 · 按评论数排序</div>
+    <div class="sort-note">💬 以下按评论数从高到低排序</div>
+    <div class="posts-grid">
+
+      <!-- 1 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">1</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/1ef5bfa79beecd28edb93ab48c32c4e6/1040g00831tnrsh3bnqe048cn5a9n9lu6nr1alig!nc_n_webp_mw_1" alt="老铺毕业是不可能的✨" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🥇</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺毕业是不可能的✨</div>
+          <div class="post-date">📅 2026-03-15</div>
+          <div class="post-desc">累计奋斗的成果，很多喜欢的买不到。金灿灿的心头好，还是血脉觉醒的太晚啦。花丝本命继续加油。#老铺黄金 #黄金 #一入黄金深似海</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">201</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">828</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">221</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69b67618000000001a026288" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">2</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/38430d5e6f6a45f1ef3dc253d9193e63/notes_pre_post/1040g3k031tvni8th7e0g5navj14g8emghpnk3g8!nc_n_webp_mw_1" alt="有没和我一样的" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🥈</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">有没和我一样的，一件老铺就毕业了，买不动了</div>
+          <div class="post-date">📅 2026-03-21</div>
+          <div class="post-desc">（内容较短，引发大量共鸣讨论）</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">88</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">23</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">8</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69be8a1f0000000021011ddc" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">3</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/d4689c9c0593538392ef5dce361f267b/notes_uhdr/1040g3qo31si5oeu8l6704boe588ug7ne0hvi5cg!nc_n_webp_mw_1" alt="拿下老铺花丝" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🥉</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">拿下老铺花丝，这下能毕业了吗？</div>
+          <div class="post-date">📅 2026-02-14</div>
+          <div class="post-desc">不买不死心，这下如愿了，能毕业了吧？#一入黄金深似海 #黄金 #黄金手镯 #老铺黄金</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">76</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">90</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">25</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/698fdb65000000000a029090" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">4</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/9edbb5f3a67f4ec501b955c9045e4043/notes_pre_post/1040g3k0320fmce575eg045nqk4fauc5u0blt91o!nc_n_webp_mw_1" alt="老铺这回真的毕业了" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺这回真的毕业了！</div>
+          <div class="post-date">📅 2026-05-23</div>
+          <div class="post-desc">又来整理我的老铺黄金了，买买卖卖，留下的都是真爱了～真是完颜盒！立个flag就此毕业！连番涨价后这回也确实是买不动了。摆在一起发现自己的审美还挺统一的，葫芦买了三只；蝴蝶买了三只……</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">67</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">178</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">39</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a1069a0000000003503a066" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">5</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/9a61fa5501848a4f50e5e74361b20e0e/notes_pre_post/1040g3k831rdatvs0no1g49sjaas8kfrlt4q3vh0!nc_n_webp_mw_1" alt="老铺黄金暂时毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺黄金暂时毕业</div>
+          <div class="post-date">📅 2026-01-16（编辑）</div>
+          <div class="post-desc">普通工薪族老铺暂时毕业，喜欢的款差不多买齐了（感谢老公的鼎力支持）。第一次知道老铺是22年，那天他带了个嘎乌盒，好奇去搜了一下，第一次听说了老铺这个品牌……</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">65</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">204</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">57</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/696a2311000000002102a8cb" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">6</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221122/053499e7becfa530bb91bd3e8b403752/1040g2sg31o73or6sl2lg4a44c756m24sjdq883g!nc_n_webp_mw_1" alt="老铺二次毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺二次毕业</div>
+          <div class="post-date">📅 2025-10-29（编辑）</div>
+          <div class="post-desc">之前说了一次老铺毕业了不买了，结果禁不起涨价前的诱惑又买了，这次真的是要毕业了，毕竟涨价30%-40%以后溢价有些太高了。四层首饰盒到了，给我的小可爱们搬个家……</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">55</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">107</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">34</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6901868b0000000007002f65" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 7 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">7</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221122/10d9f213256bb57e53cc72749c4214c0/notes_pre_post/1040g3k831ta67pju6e9g5p9i5bral2llphos8c8!nc_n_webp_mw_1" alt="收心！老铺毕业快乐" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">收心！老铺毕业快乐</div>
+          <div class="post-date">📅 2026-03-05</div>
+          <div class="post-desc">谁懂啊！老铺涨价前精准上车，双宝齐入太快乐。账号里的九折券不用总觉得亏，趁着活动果断下手，把金蝉和金刚橛都抱回了家。钱包已空｜老铺黄金，圆满收官🎓</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">43</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">73</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">11</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69a879970000000023038135" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 8 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">8</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221122/35a1603e6606875c5fe62e8e47564900/notes_pre_post/1040g3k831rftvkga7od0400renj3h6fkdqomqm0!nc_n_webp_mw_1" alt="老铺穷人三件套" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺穷人三件套集齐 毕业撒花</div>
+          <div class="post-date">📅 2026-01-18（编辑）</div>
+          <div class="post-desc">忍不住还是买了点钻葫芦，入了锁骨链10g，寄来10.03g，没有姐妹们那么幸运，只有弱击0.03g，但是活动减了2k出头，就当赚了。#老铺点钻葫芦 #老铺玫瑰花窗 #老铺蝴蝶</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">34</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">41</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">5</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/696ccb4f0000000021030a77" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 9 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">9</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/b04194ac3bddda57552d434fd51be772/notes_uhdr/1040g3qg31tan7ovn5a0047qcnada17oinod615g!nc_n_webp_mw_1" alt="老铺钻龙香囊" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺钻龙香囊也太美了</div>
+          <div class="post-date">📅 2026-03-09（编辑）</div>
+          <div class="post-desc">涨价前入手中号绳款，准备自己配个金链换着戴。涨价后发现已经高攀不起，老铺入门即毕业。</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">29</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">232</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">55</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69a8fdf20000000022020b5c" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 10 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">10</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221127/6ef1b69322053e82f7d69aff533e4551/note_pre_post_uhdr/1040g3r03205kl7to2a0045sbo9a3u3g5k7om8a0!nd_dft_wlteh_webp_3" alt="我的小小毕业礼" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">我的小小毕业礼</div>
+          <div class="post-date">📅 2026-05-15</div>
+          <div class="post-desc">被我拍的跟破烂似的。#老铺黄金 #这些年打下江山</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">29</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">148</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">23</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a0618590000000036031f74" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 11 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">11</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/daa675c8dd0bdc78316a14cc1f385d08/notes_pre_post/1040g3k831s0l8gthkidg401hcjttgcmejsv3i28!nc_n_webp_mw_1" alt="老铺黄金可以毕业啦" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺黄金可以毕业啦！</div>
+          <div class="post-date">📅 2026-01-31</div>
+          <div class="post-desc">买不动了真的都很美，无锡没有店无法试！中号花窗好闪！生肖羊牌也到了，结果今天就金价大跌。#一入黄金深似海 #囤金是一件有趣的事情</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">27</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">12</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">—</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/697dec0700000000280214af" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 12 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">12</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/5af09b50be837f66bdf762ab45d5bffd/1040g2sg31tlf1gmhneeg4142stjgre1vdl9skg0!nc_n_webp_mw_1" alt="普通人的老铺黄金毕业照" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">普通人的老铺黄金毕业照～</div>
+          <div class="post-date">📅 2026-03-13</div>
+          <div class="post-desc">终于收到上个月涨价前抢到的中号花丝如意圆满了！实物真的好美，中号上身正好。涨价后的老铺已经高攀不起了，就这样暂时毕业吧。这四根都很喜欢……</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">25</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">30</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">5</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69b41463000000001a026277" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 13 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">13</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/ecbc9222ffcbb9d2223bc7c247f0077c/notes_pre_post/1040g3k031t4r887t5m0g4a6o11io2sd9a4qgmoo!nc_n_webp_mw_1" alt="我喜欢的三款 只日常自戴 暂时毕业了" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">我喜欢的三款 只日常自戴 暂时毕业了</div>
+          <div class="post-date">📅 2026-03-01（编辑）</div>
+          <div class="post-desc">第一个是小号金刚杵；第二个点钻葫芦中号，这个带的最多；第三个是点钻随身佛。选择了几个日常戴的、百搭的。今天看到2026首轮涨价，感觉自己已经可以毕业了。</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">20</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">30</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">7</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69a2fbe5000000001a0268fb" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 14 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">14</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221122/bd51db1212cf71cae306848aae070958/note_pre_post_uhdr/1040g3r031rp39lr4im005nom8e808s5j7h5qos0!nd_dft_wlteh_webp_3" alt="老铺三件套毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺三件套毕业</div>
+          <div class="post-date">📅 2026-01-25</div>
+          <div class="post-desc">黄金血脉彻底觉醒。本来周末在北京想去SKP买的，但是看到排队盛况还是算了，直接万象城半小时解决战斗，算下来也不到9折。2025我辛苦了，该买点还是买点吧。#老铺黄金</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">20</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">18</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">9</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69762e5a000000002203a9bb" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 15 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">15</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/f9af15e930c2dbca6d89ebdce2123f03/notes_uhdr/1040g3qg3214dbjg1ms005n2hj4nklfq54vrekr8!nc_n_webp_mw_1" alt="在老铺就没有毕业这一说" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">在老铺就没有毕业这一说</div>
+          <div class="post-date">📅 2026-06-08（中国香港）</div>
+          <div class="post-desc">涨价前就跟自己说拿下蓝色十字架就毕业～结果今天试了一下新款金刚杵喜爱程度居然跃过十字架。但是十字架是我不甘心的款，先拿下十字架，金刚杵就下次吧。#老铺黄金十字架</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">8</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">82</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">19</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a259aa2000000003600262c" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 16 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">16</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/4a4b1726652d8d443f6dbbff8d8145aa/1040g2sg31vlh3pbt48004bq7njn55sdoat9mha0!nc_n_webp_mw_1" alt="老铺黄金阶段性毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺黄金阶段性毕业</div>
+          <div class="post-date">📅 2026-05-02</div>
+          <div class="post-desc">#传承东方文化 #老铺黄金 #黄金饰品 新买的香囊从13涨到17了，之前买的好多款式价格也都翻倍了，还是黄金香啊。#一入黄金深似海</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">7</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">84</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">22</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69f59b7a0000000035030b6d" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 17 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">17</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/3bf7dfddb69d4556507affa31cafbacb/notes_uhdr/1040g3qg320gqiihpm80040umhib19a21busoe88!nc_n_webp_mw_1" alt="老铺女孩又毕业了一盒" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺女孩又毕业了一盒~</div>
+          <div class="post-date">📅 2026-05-23（北京）</div>
+          <div class="post-desc">没有女孩子会不喜欢珠宝首饰吧！！买金还可以升值只能说早买早赚。虽然我嫌麻烦不喜欢戴，可是看着就开心。最后一层还有点空，努力搬砖再接再厉啦。</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">5</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">99</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">13</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a118c11000000003701fa49" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 18 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">18</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221026/e907f1ea2f696944904e37d388b8356f/notes_pre_post/1040g3k031tall0na5e0048praduaa7sf2p9fbd8!nc_n_webp_mw_1" alt="老铺黄金毕业照" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💛</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺黄金毕业照 愿我多金 愿我开心🧡</div>
+          <div class="post-date">📅 2026-03-10（编辑）</div>
+          <div class="post-desc">五条项链最喜欢的是一开始没看上的小金球，素金带上很亮，而且很适合叠戴。这轮涨价后直接毕业了，以后看看水贝平替吧。#黄金首饰 #年轻人买金 #古法黄金</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">6</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">9</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">1</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69a8f152000000002603e716" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+    </div><!-- /posts-grid -->
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ===== 君佩 ===== -->
+  <section class="keyword-section">
+    <div class="section-title">
+      💍 君佩 · 毕业
+      <span class="tag">9 篇</span>
+    </div>
+    <div class="section-subtitle">搜索关键词：君佩 毕业 · 近半年内发布 · 按评论数排序</div>
+    <div class="sort-note">💬 以下按评论数从高到低排序</div>
+    <div class="posts-grid">
+
+      <!-- 1 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">1</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221132/b09651e03791a5b0fe3de307afee3918/notes_pre_post/1040g3k031gq6jurck20043i862mmp19v9uepbgo!nd_dft_wlteh_webp_3" alt="老铺毕业入坑君佩" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺毕业，入坑君佩</div>
+          <div class="post-date">📅 2025-04-28</div>
+          <div class="post-desc">自从老铺毕业之后，看上了君佩，网上刷到很多，入了五花手链和单花耳钉，收到后先被包装震惊到了，太有仪式感了，连手提袋都是丝绒感的。不得不说，现在的黄金越来越像奢侈品了。</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">79</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">889</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">551</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/680edf7100000000230033fa" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">2</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221133/c565c69ccc7aa09b65be278b52768d53/note_pre_post_uhdr/1040g3r031vbg0tcgjq005nmnn3hg8dqevrcbie0!nd_dft_wlteh_webp_3" alt="宣布从老铺君佩毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">宣布从老铺君佩毕业啦</div>
+          <div class="post-date">📅 2026-04-24</div>
+          <div class="post-desc">喜欢的都拥有啦！这一次涨价幅度太大了，以后也买不起了哈哈哈。#一入黄金深似海 #黄金也能美出高级感 #当代年轻人黄金血脉觉醒 #老铺黄金 #君佩黄金</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">43</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">322</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">107</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69eb52aa000000003802293d" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">3</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221133/8dc70203a075704df23e8d095ebd1dc7/1040g2sg31t8kar8c58c05n4viovk4s4ve2r3o38!nd_dft_wlteh_webp_3" alt="君佩毕业了" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">君佩毕业了～</div>
+          <div class="post-date">📅 2026-03-03（编辑）</div>
+          <div class="post-desc">今年额度超标完成了～（引发大量共鸣评论）</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">51</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">47</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">18</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69a6daa50000000026031c91" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">4</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221132/c5d1d3732813c12e15bf10ff277695fe/note_pre_post_uhdr/1040g3r031t9spnmgls2g410p1h7m5dpoogubqmo!nd_dft_wlteh_webp_3" alt="君佩毕业下车" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">君佩毕业下车</div>
+          <div class="post-date">📅 2026-03-04（编辑）</div>
+          <div class="post-desc">年前逛商场看到新开了店，好奇逛逛。忍不住买了倾城蝴蝶手链，过了两天又心心念貔貅款式，再过一周继续心心念护身佩，好吧听说即将涨价15%-30%，赶紧买完下车。</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">12</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">43</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">25</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69a827e5000000001600bd9f" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">5</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221132/dbf65f9abdf3af4d475c9a88a50470fe/1040g2sg31tfvul44lkbg49slienssk0vi285gso!nd_dft_wlteh_webp_3" alt="君佩算毕业了吗" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">君佩算毕业了吗？</div>
+          <div class="post-date">📅 2026-03-09</div>
+          <div class="post-desc">排队三小时，真的好快乐！本来一时兴起，路过国贸逛一下君佩，排队发现第二天涨价，果断撑了下去，排队加选首饰足足待了五小时。但真的好快乐！今天涨价了，感觉买到就是赚到。</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">10</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">47</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">33</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69ae65020000000015021d0c" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">6</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221133/afa493f73aff2bf1316b5dbc5c606fda/notes_pre_post/1040g3k031opqgsfd1q604a191h0rv4knkhn22sg!nd_dft_wlteh_webp_3" alt="从君佩毕业了" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">从君佩毕业了🎓</div>
+          <div class="post-date">📅 2025-11-12</div>
+          <div class="post-desc">8月底定的～比预期到货早了20天左右，暴击了0.8g！#闪闪惹人爱 #君佩黄金</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">10</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">11</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">2</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6914a4bd000000001b0262b1" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 7 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">7</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221134/45e35b769c70fba66e58364a2a66143d/note_pre_post_uhdr/1040g3r031sroif8bl64g49vvaaj0ohcsk760l38!nd_dft_wlteh_webp_3" alt="君佩竹节毕业款" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">君佩的竹节真是完美的毕业款竹节镯！🎍</div>
+          <div class="post-date">📅 2026-02-22（编辑）</div>
+          <div class="post-desc">开箱仪式感好足🥰 #翡翠竹节手镯 #镯子 #竹节 #富贵竹节节高 #古法手镯 #古法黄金 #手镯 #君佩 #手镯分享 #珠宝设计</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">8</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">5</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">3</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6999ad4b00000000090388ee" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 8 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">8</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221132/9ec446af44732838ff133a3dff27b413/1040g2sg31o4msp51ksf05p3ue2d487e4b2tdmso!nd_dft_wlteh_webp_3" alt="从君佩毕业了2" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">从君佩毕业了🎓试了个遍还是决定买两件大的</div>
+          <div class="post-date">📅 2025-10-27（编辑）</div>
+          <div class="post-desc">没忍住又来买了，涨价就是催买符。百克竹节手镯金重112g，折后17.5w；大号貔貅项链金重66g，折后17.3w。给女儿攒嫁妆吧。#君佩竹节镯 #君佩黄金 #君佩百克大貔貅</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">5</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">80</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">23</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/68feff3d00000000070031fd" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 9 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">9</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221133/aba69fbc3cdf15767c297451269bc3c7/note_pre_post_uhdr/1040g3r831no511rhlm2g4a3lrpr5h8oa08hr3k0!nd_dft_wlteh_webp_3" alt="老铺毕业后买君佩" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">💍</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">老铺毕业后第一次买君佩 五只蝴蝶对五花</div>
+          <div class="post-date">📅 2025-10-17</div>
+          <div class="post-desc">当时在店里试戴的是三只蝴蝶的款～已经很喜欢了。跟我的五花搭配一起，立刻想到妈妈的饮歌：怎么也飞不出蝴蝶花花的世界哈哈哈。买一条手链，一大堆包装！盒子和绒面小袋子质感很好，证书好像银行存折本～</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">4</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">44</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">19</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/68f2245e0000000003023bf7" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+    </div><!-- /posts-grid -->
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- ===== 爱马仕 ===== -->
+  <section class="keyword-section">
+    <div class="section-title">
+      🧡 爱马仕 · 毕业
+      <span class="tag">7 篇</span>
+    </div>
+    <div class="section-subtitle">搜索关键词：爱马仕 毕业（含 Hermès/Hermes/🐎家）· 近半年内发布 · 按评论数排序</div>
+    <div class="sort-note">💬 以下按评论数从高到低排序</div>
+    <div class="posts-grid">
+
+      <!-- 1 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">1</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221139/5417889f0ed61259e34e26e16ae947c6/note_pre_post_uhdr/1040g3r031voe3sllig2g40sqibe0a8p48t43dh8!nd_dft_wlteh_webp_3" alt="养马第一阶段结束" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">🐎养马第一阶段结束 普皮毕业照</div>
+          <div class="post-date">📅 2026-05-04（编辑）</div>
+          <div class="post-desc">养马三原则：1️⃣只选金刚色 2️⃣只配心水货 3️⃣只买最夯款。#爱马仕 #爱马仕包包 #爱马仕mk2 #爱马仕bk25</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">79</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">264</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">93</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69f8943e00000000380213e0" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 2 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">2</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221140/c221beb4ec453d29b424ed4ed918cf1a/oss-sg/notes_pre_post/1040g3mo321f6gtt5nc0g5na3q8mljkj58pm0lh0!nd_dft_wgth_webp_3" alt="🐎家毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">🐎家毕业🎉</div>
+          <div class="post-date">📅 2026-06-16（编辑，美国）</div>
+          <div class="post-desc">不知不觉养马9年了，这次SA给了一个黑金box二代。KP和MK已经晋升我每日爱用包了，大包除了通勤的那几天基本不怎么用了，所以小包还是好用，存在感还小。拿完今年的QB突然不知道下一个要拿什么了，想要的基本都拿遍了……</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">5</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">81</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">10</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a30abfc000000000e021800" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 3 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank top3">3</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221139/3b8a12881399a17e17ebc20a7d7a0b3a/notes_pre_post/1040g3k831ktt065s2o7g5o3ukfggbkrhred52kg!nd_dft_wlteh_webp_3" alt="一家四口普皮毕业" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">一家四口 普皮毕业</div>
+          <div class="post-date">📅 2025-08-08</div>
+          <div class="post-desc">记录一下，我也不知道买到第几个包会没有情绪价值，目前进小黑屋还是很开心的。#Hermes #大象灰 #birkin25 #Kelly25 #康康 #爱马仕</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">15</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">124</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">80</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6895b95e000000002301a3f3" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 4 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">4</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221140/9986d8b581134ee35955a99d3e6e0541/notes_pre_post/1040g3k0321ecldt1nu105o8ku3o094s7gb0podg!nd_dft_wlteh_webp_3" alt="用hermes完整记录毕业清单" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">用hermes完整记录了我的毕业清单</div>
+          <div class="post-date">📅 2026-06-16（辽宁）</div>
+          <div class="post-desc">毕业了，收拾东西是个繁重的过程。有一些东西，在宿舍很久没有用过，但是想保留记忆。hermes还是太好用了。（注：此处 hermes 指爱马仕字体/笔记本，为品牌 lifestyle 内容）</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">—</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">0</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">0</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a2fe464000000000603057c" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 5 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">5</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221139/50289acc59b245bcc7fae062974a8cb6/notes_pre_post/1040g3k8321moso527o9g48q0mgcdj03suchgic8!nd_dft_wlteh_webp_3" alt="Hermes普皮毕业了" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">Hermes｜普皮毕业了</div>
+          <div class="post-date">📅 2026-06-22（编辑，美国）</div>
+          <div class="post-desc">BK的黑白灰集齐，普皮毕业🎓。每次被offer新包第一时间配内胆，DGAZ还是好用的，俩birkin 25可以共用一个，挺好。主打一个该花花该省省。#birkin25 #dgaz内胆 #爱马仕</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">3</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">16</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">2</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a386bcd0000000020038de7" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 6 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">6</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221140/7f895c0319c67dcd6842de7e6c3833c1/note_pre_post_uhdr/1040g3r831uvqu0k2is705nsaik7g87eb7uifcro!nd_dft_wlteh_webp_3" alt="在爱马仕实习的一年毕业啦" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">在爱马仕实习的一年毕业啦！</div>
+          <div class="post-date">📅 2026-04-15</div>
+          <div class="post-desc">一年时间也很快度过啦～很幸运能够这段机会，收获了非常多的经验和成长，组里氛围也超级niceeeeee。接下来也要加油呀！！！#奢侈品实习 #爱马仕 #上海实习 #理想职场生活</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">2</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">32</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">1</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/69df7aa60000000023025f3f" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+      <!-- 7 -->
+      <div class="post-card">
+        <div class="post-img-wrap">
+          <div class="post-rank">7</div>
+          <img src="https://sns-webpic-qc.xhscdn.com/202606221138/cea5daa0cc7e84cab2a45790acddcd40/spectrum/1040g34o320ppjooq6q104a33um1f4j134hrnn7o!nc_n_webp_mw_1" alt="千金毕业换爱马仕" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div class="img-placeholder" style="display:none">🧡</div>
+        </div>
+        <div class="post-body">
+          <div class="post-title">千金毕业用爸妈送的包换爱马仕</div>
+          <div class="post-date">📅 2026-05-30（四川）</div>
+          <div class="post-desc">#包包 #青奢荟 #两代人的审美差异 #父母的审美 #女大 #香奈儿 #戈雅 #爱马仕（视频内容中所有产品均为二手）</div>
+          <div class="post-stats">
+            <div class="stat highlight"><span class="icon">💬</span><span class="val">63</span></div>
+            <div class="stat"><span class="icon">❤️</span><span class="val">5176</span></div>
+            <div class="stat"><span class="icon">⭐</span><span class="val">152</span></div>
+          </div>
+          <a class="post-link" href="https://www.xiaohongshu.com/explore/6a1abb6a000000000702e118" target="_blank">查看原帖 →</a>
+        </div>
+      </div>
+
+    </div><!-- /posts-grid -->
+  </section>
+
+</div><!-- /container -->
+
+<footer class="site-footer">
+  数据采集时间：2026-06-22 &nbsp;|&nbsp; 数据来源：小红书公开内容 &nbsp;|&nbsp; 仅供内部分析使用<br>
+  统计口径：标题含品牌词+"毕业"，发布时间 ≥ 2025-12-22，按评论数降序排列
+</footer>
+
+</body>
+</html>
