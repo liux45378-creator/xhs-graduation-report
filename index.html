@@ -122,7 +122,7 @@ function renderCard(note,rank){
   var rc=rank<=3?'top3':'';
   var statusHtml=note.status?'<span class="note-status">'+note.status+'</span><br>':'';
   var coverHtml=note.cover
-    ?'<img class="note-cover" src="'+note.cover+'" alt="" loading="lazy" onerror="this.style.display=&quot;none&quot;">'   
+    ?'<img class="note-cover" src="'+note.cover+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'    
     :'<div class="note-cover-placeholder">📷</div>';
   var inner=coverHtml+'<div class="note-body">'
     +'<div><span class="note-rank '+rc+'">#'+rank+'</span></div>'
